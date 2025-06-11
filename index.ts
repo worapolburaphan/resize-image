@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { join } from "path";
+import { join, extname } from "path";
 import { createStorageProvider, type StorageProvider } from "./storage";
 
 const ORIGINAL_FOLDER = "./original";
@@ -27,9 +27,12 @@ async function getFileSize(filePath: string): Promise<number> {
   return await storage.getSize(filePath);
 }
 
+function getExtension(fileName: string): string {
+  return extname(fileName).toLowerCase();
+}
+
 function isSupportedImageFormat(fileName: string): boolean {
-  const ext = fileName.toLowerCase().substring(fileName.lastIndexOf("."));
-  return SUPPORTED_FORMATS.includes(ext);
+  return SUPPORTED_FORMATS.includes(getExtension(fileName));
 }
 
 async function resizeImage(
@@ -82,12 +85,11 @@ async function resizeImage(
       });
 
       // Set quality based on format
-      if (
-        outputPath.toLowerCase().includes(".jpg") ||
-        outputPath.toLowerCase().includes(".jpeg")
-      ) {
+      const ext = getExtension(outputPath);
+
+      if (ext === ".jpg" || ext === ".jpeg") {
         processedImage = processedImage.jpeg({ quality, mozjpeg: true });
-      } else if (outputPath.toLowerCase().includes(".png")) {
+      } else if (ext === ".png") {
         processedImage = processedImage.png({
           compressionLevel: Math.min(
             9,
@@ -95,7 +97,7 @@ async function resizeImage(
           ),
           quality,
         });
-      } else if (outputPath.toLowerCase().includes(".webp")) {
+      } else if (ext === ".webp") {
         processedImage = processedImage.webp({ quality });
       }
 
